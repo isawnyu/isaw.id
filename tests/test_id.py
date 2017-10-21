@@ -28,3 +28,14 @@ def test_make_namespace():
     global WHEN
     this = isaw.id.make(content='', namespace='foo', date_time=WHEN)
     assert_equal(this, '/foo/8c2dcb')
+
+def test_make_namespace_content():
+    global WHEN
+    this = isaw.id.make(content='foo', namespace='bar', date_time=WHEN)
+    assert_equal(this, '/bar/46ee55')
+
+def test_make_length():
+    global WHEN
+    this = isaw.id.make(content='', date_time=WHEN, id_length=17)
+    assert_equal(len(this), 17*2+1)
+    assert_equal(this, '/c73b80d0146d6d03679c3077f9f05129db')
