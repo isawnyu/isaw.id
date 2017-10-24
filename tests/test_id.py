@@ -7,9 +7,9 @@ Test basic functionality of the isaw.id package
 from datetime import datetime
 import glob
 import isaw.id
-from nose.tools import assert_equal, assert_raises
+from nose.tools import assert_equal, assert_raises, assert_true
 from os import remove
-from os.path import dirname, join
+from os.path import dirname, isfile, join
 import shutil
 
 
@@ -115,3 +115,20 @@ def test_saved():
     remove(dest)
     for fn in glob.glob(join(path, '*.bak')):
         remove(fn)
+
+def test_saved_tmp():
+    global WHEN
+    path = join(dirname(__file__), 'data')
+    src = join(path, 'nstest')
+    dest = join(path, 'temptest')
+    shutil.copy(src, dest)
+    contents = 'Do you like my hat'.split()
+    m = isaw.id.Maker(registry_path=path, namespace='temptest')
+    for c in contents:
+        m.make(content=c, date_time=WHEN)
+    assert_true(isfile(join(path, 'tmp', 'temptest')))
+    del(m)
+    remove(dest)
+    for fn in glob.glob(join(path, '*.bak')):
+        remove(fn)
+
