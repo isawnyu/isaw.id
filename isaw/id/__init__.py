@@ -100,6 +100,18 @@ class Maker:
         namespace=None,
         date_time=datetime.now(),
         id_length=None):
+        """Generate an id.
+
+        Keyword arguments:
+        content -- zero or more bytes of content to give to the hash function
+        namespace -- optional string to use for namespace in ID generation
+        date_time -- a datetime object that is converted to an isoformat stamp
+                     and appended to the content before hash generation
+        id_length -- optional number of hex values to use in the id
+
+        This method creates ID strings like '/46ee55' when namespace == '' and
+        '/foo/8c2dcb' when namespace == 'foo'.
+        """
 
         stamp = bytes(date_time.isoformat(), encoding='ascii')
         if type(content) == str:
@@ -119,7 +131,7 @@ class Maker:
             ns = namespace
         if self.ensure:
             tries = 0
-            while not self._ok(ns, digest):
+            while not self._unique(ns, digest):
                 if tries == 0:
                     logger = logging.getLogger(sys._getframe().f_code.co_name)
                 logger.warning(
@@ -139,25 +151,29 @@ class Maker:
             return '/{}'.format(digest)
 
 
-    def _ok(self, ns, digest):
+    def _unique(self, ns, digest):
+        """Test if digest is in a namespace registry."""
         r = self._load_register(ns)
         return not(digest in r)
 
 
     def _register(self, ns, digest):
+        """Add a new digest to a namespace registry."""
         self.registry[ns].add(digest)
         self.dirty[ns] = True
 
 
     def _load_register(self, ns):
+        """Load a namespace registry file from storage to memory."""
         try:
             r = self.registry[ns]
         except KeyError:
 
             # stash an unaltered copy of the file in case something goes wrong
-            makedirs(join(self.registry_path, 'tmp'), exist_ok=True)
+            path_tmp = join(self.registry_path, 'tmp')
+            makedirs(path_tmp, exist_ok=True)
             path = join(self.registry_path, ns)
-            copy2(path, join(self.registry_path, 'tmp', ns))
+            copy2(path, join(path_tmp, ns))
 
             # read the file
             try:
